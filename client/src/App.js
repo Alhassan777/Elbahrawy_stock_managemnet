@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import SetPin from './pages/SetPin';
 import Dashboard from './pages/Dashboard';
-import Scanner from './pages/Scanner';
 import Nav from './components/Nav';
+
+const Scanner = lazy(() => import('./pages/Scanner'));
 
 function ProtectedRoute({ children, adminOnly }) {
   const { token, staff } = useAuth();
@@ -58,7 +59,9 @@ function AppRoutes() {
           path="/scan"
           element={
             <ProtectedRoute>
-              <Scanner />
+              <Suspense fallback={<div style={{ textAlign: 'center', padding: 40 }}>Loading scanner...</div>}>
+                <Scanner />
+              </Suspense>
             </ProtectedRoute>
           }
         />

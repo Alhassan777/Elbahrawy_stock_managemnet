@@ -4,7 +4,7 @@ const { PrismaClient } = require('@prisma/client');
 const authenticate = require('../middleware/authenticate');
 const requireAdmin = require('../middleware/requireAdmin');
 const requirePinReset = require('../middleware/requirePinReset');
-const { createShopifyListing, archiveShopifyListing } = require('../services/shopify');
+const { syncCreateWithQueue, syncArchiveWithQueue } = require('../services/shopify');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -135,12 +135,8 @@ router.post('/', authenticate, requireAdmin, requirePinReset, async (req, res) =
       },
     });
 
-    const shopifyIds = await createShopifyListing(unit);
+    const shopifyIds = await syncCreateWithQueue(unit);
     if (shopifyIds) {
-      await prisma.unit.update({
-        where: { unit_id: unit.unit_id },
-        data: shopifyIds,
-      });
       unit.shopify_product_id = shopifyIds.shopify_product_id;
       unit.shopify_variant_id = shopifyIds.shopify_variant_id;
     }
@@ -175,7 +171,7 @@ router.patch('/:id/sell', authenticate, requirePinReset, async (req, res) => {
       },
     });
 
-    await archiveShopifyListing(updatedUnit);
+    await syncArchiveWithQueue(updatedUnit);
 
     res.json(updatedUnit);
   } catch (err) {

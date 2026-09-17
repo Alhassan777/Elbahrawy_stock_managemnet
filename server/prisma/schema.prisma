@@ -44,8 +44,9 @@ model Unit {
   shopify_product_id String?
   shopify_variant_id String?
 
-  staff        Staff         @relation(fields: [staff_id], references: [staff_id])
+  staff        Staff              @relation(fields: [staff_id], references: [staff_id])
   transactions Transaction[]
+  sync_queue   ShopifySyncQueue[]
 
   @@map("units")
 }
@@ -76,4 +77,30 @@ model Staff {
   transactions Transaction[]
 
   @@map("staff")
+}
+
+enum SyncAction {
+  create_listing
+  archive_listing
+}
+
+enum SyncStatus {
+  pending
+  failed
+  done
+}
+
+model ShopifySyncQueue {
+  id         Int        @id @default(autoincrement())
+  unit_id    Int
+  action     SyncAction
+  status     SyncStatus @default(pending)
+  attempts   Int        @default(0)
+  last_error String?
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+
+  unit Unit @relation(fields: [unit_id], references: [unit_id])
+
+  @@map("shopify_sync_queue")
 }

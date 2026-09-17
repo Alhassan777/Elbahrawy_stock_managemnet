@@ -5,6 +5,8 @@ const staffRouter = require('./routes/staff');
 const transactionsRouter = require('./routes/transactions');
 const webhooksRouter = require('./routes/webhooks');
 
+const { startSyncWorker } = require('./services/shopify');
+
 const app = express();
 
 app.use(cors());
@@ -21,4 +23,5 @@ app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  startSyncWorker();
 });
