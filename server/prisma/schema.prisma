@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Grade {
+  A
+  B
+  C
+}
+
+enum UnitStatus {
+  available
+  sold
+}
+
+enum TransactionType {
+  sale
+  receipt
+}
+
+enum StaffRole {
+  admin
+  cashier
+}
+
+model Unit {
+  unit_id            Int             @id @default(autoincrement())
+  qr_code            String          @unique
+  brand              String
+  model              String
+  specs              Json
+  grade              Grade
+  condition_notes    String?
+  price              Decimal         @db.Decimal(10, 2)
+  status             UnitStatus      @default(available)
+  received_at        DateTime        @default(now())
+  supplier           String?
+  staff_id           Int
+  shopify_product_id String?
+  shopify_variant_id String?
+
+  staff        Staff         @relation(fields: [staff_id], references: [staff_id])
+  transactions Transaction[]
+
+  @@map("units")
+}
+
+model Transaction {
+  txn_id       Int             @id @default(autoincrement())
+  unit_id      Int
+  type         TransactionType
+  price_at_sale Decimal        @db.Decimal(10, 2)
+  staff_id     Int
+  timestamp    DateTime        @default(now())
+  notes        String?
+
+  unit  Unit  @relation(fields: [unit_id], references: [unit_id])
+  staff Staff @relation(fields: [staff_id], references: [staff_id])
+
+  @@map("transactions")
+}
+
+model Staff {
+  staff_id          Int       @id @default(autoincrement())
+  name              String
+  role              StaffRole
+  pin               String
+  requires_pin_reset Boolean  @default(true)
+
+  units        Unit[]
+  transactions Transaction[]
+
+  @@map("staff")
+}
